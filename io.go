@@ -30,17 +30,16 @@ func ReadByte(r io.Reader) (byte, error) {
 // ReadTill reads till 'delim' (non inclusive) and returns bytes read and possible error.
 // if maxLen is <= 0 it will use MaxLenDefault.
 func ReadTill(r io.Reader, maxLen int, delim byte) ([]byte, error) {
-	return ReadTillContext(r, maxLen, delim, context.Background())
+	return ReadTillContext(context.Background(), r, maxLen, delim)
 }
 
 // this function's params are very long, i don't want to create a struct
 // just for it though, should not be too long when calling it
 
-// ReadTill reads till 'delim' (non inclusive) or ctx.Done()
+// ReadTillContext reads till 'delim' (non inclusive) or ctx.Done()
 // and returns bytes read and possible error.
 // if maxLen is <= 0 it will use MaxLenDefault.
-func ReadTillContext(r io.Reader, maxLen int, delim byte,
-	ctx context.Context) (ret []byte, err error) {
+func ReadTillContext(ctx context.Context, r io.Reader, maxLen int, delim byte) (ret []byte, err error) {
 
 	if maxLen <= 0 {
 		maxLen = MaxLenDefault

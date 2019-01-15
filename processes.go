@@ -9,24 +9,21 @@ import (
 
 // Start starts cmd and returns a Process for it
 func Start(cmd *exec.Cmd) (Process, error) {
-	// file descriptors
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return Process{}, err
+	// setup file descriptors
+	stdin, err1 := cmd.StdinPipe()
+	stdout, err2 := cmd.StdoutPipe()
+	stderr, err3 := cmd.StderrPipe()
+	for _, err := range []error{err1, err2, err3} {
+		if err != nil {
+			return Process{}, err
+		}
 	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return Process{}, err
-	}
-	stderr, err := cmd.StderrPipe()
+
+	err := cmd.Start()
 	if err != nil {
 		return Process{}, err
 	}
 
-	err = cmd.Start()
-	if err != nil {
-		return Process{}, err
-	}
 	return Process{
 		cmd:    cmd,
 		Stdin:  stdin,
@@ -69,12 +66,7 @@ func (p Process) WriteLine(t interface{}) error {
 // ReadLine reads until newline or timeout expires
 // TODO: implement timeout
 func (p Process) ReadLine(timeout time.Duration) ([]byte, error) {
-	b, err := ReadTill(p.Stdout, p.maxLen, '\n')
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
+	return ReadTill(p.Stdout, p.maxLen, '\n')
 }
 
 // Interactive sets the file descriptors to os.Stderr os.Stdout and os.Stdin
@@ -84,10 +76,10 @@ func (p Process) Interactive() error {
 
 // the actual implementation of Process.Interactive
 func interactive(p Process, in io.Reader, out, err io.Writer) error {
-	// Make it interactive
-	go io.Copy(p.Stdin, in)
+	// Copy file descriptors
 	go io.Copy(out, p.Stdout)
 	go io.Copy(err, p.Stderr)
+	go io.Copy(p.Stdin, in)
 
 	// Wait for the process to exit
 	return p.Wait()
