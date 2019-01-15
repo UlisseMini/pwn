@@ -38,11 +38,9 @@ func (l listener) Accept() (Conn, error) {
 	}
 
 	return Conn{
-		rawConn,
+		Conn: rawConn,
 		// the default line length to be used with Conn.ReadLine
-		MaxLenDefault,
-
-		sync.Mutex{},
+		maxLen: MaxLenDefault,
 	}, nil
 }
 
@@ -99,12 +97,9 @@ func Dial(network, addr string) (Conn, error) {
 	}
 
 	return Conn{
-		rawConn,
+		Conn: rawConn,
 		// the default line length to be used with Conn.ReadLine
-		MaxLenDefault,
-
-		// mutex to protect concurrent calls
-		sync.Mutex{},
+		maxLen: MaxLenDefault,
 	}, nil
 }
 
