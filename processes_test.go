@@ -9,7 +9,6 @@ package pwn
 import (
 	"bytes"
 	"io"
-	"os"
 	"os/exec"
 	"runtime"
 	"testing"
@@ -72,6 +71,12 @@ func TestSh(t *testing.T) {
 }
 
 // test the interactive function in processes.go
+//
+// DOES NOT WORK -- BLOCKS FOREVER
+// I might need to call close on the handles returned from cmd.*Pipe()
+//
+// A bad (but effective) fix could be to implement a timeout in copy inside
+// testdata/echo.go (this would be bad because process.interactive would still be broken)
 func TestInteractive(t *testing.T) {
 	var testcases = []struct {
 		// where the process reads standard in from
@@ -104,18 +109,6 @@ func TestInteractive(t *testing.T) {
 		if err != nil {
 			t.Fatalf("spawn child process: %v", err)
 		}
-
-		// terminate the process after some time, prevent the test from
-		// blocking forever if something goes wrong.
-		time.AfterFunc(time.Second, func() {
-			if err := p.Signal(os.Interrupt); err == nil {
-				return
-			}
-
-			if err := p.Kill(); err != nil {
-				t.Fatalf("failed to kill process: %v", err)
-			}
-		})
 
 		// wantErr will usually be nil, so this is effectively `if err != nil`
 		err = interactive(p, tc.stdin, outBuf, errBuf)
