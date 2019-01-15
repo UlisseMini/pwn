@@ -93,16 +93,12 @@ func TestInteractive(t *testing.T) {
 		},
 	}
 
-	// Buffers to use
-	outBuf := &bytes.Buffer{}
-	errBuf := &bytes.Buffer{}
-
 	for _, tc := range testcases {
-		// reset the buffers
-		outBuf.Reset()
-		errBuf.Reset()
+		// Buffers to use
+		outBuf := &bytes.Buffer{}
+		errBuf := &bytes.Buffer{}
 
-		// Start the process
+		// Start the process, it will echo back what is given to it
 		cmd := echo()
 		p, err := Start(cmd)
 		if err != nil {
@@ -122,7 +118,8 @@ func TestInteractive(t *testing.T) {
 		})
 
 		// wantErr will usually be nil, so this is effectively `if err != nil`
-		if err := interactive(p, tc.stdin, outBuf, errBuf); err != tc.wantErr {
+		err = interactive(p, tc.stdin, outBuf, errBuf)
+		if err != tc.wantErr {
 			t.Fatalf("got error = %v, want error %v", err, tc.wantErr)
 		}
 
@@ -138,5 +135,8 @@ func TestInteractive(t *testing.T) {
 
 // wrapper around 'go run testdata/echo.go'
 func echo(a ...string) *exec.Cmd {
-	return exec.Command("go", "run", "testdata/echo.go", a...)
+	args := []string{"run", "testdata/echo.go"}
+	args = append(args, a...)
+
+	return exec.Command("go", args...)
 }
