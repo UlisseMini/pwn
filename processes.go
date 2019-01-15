@@ -79,7 +79,12 @@ func interactive(p Process, in io.Reader, out, err io.Writer) error {
 	// Copy file descriptors
 	go io.Copy(out, p.Stdout)
 	go io.Copy(err, p.Stderr)
-	go io.Copy(p.Stdin, in)
+
+	// when copying stdin we need to close it when done
+	go func() {
+		defer p.Stdin.Close()
+		io.Copy(p.Stdin, in)
+	}()
 
 	// Wait for the process to exit
 	return p.Wait()
